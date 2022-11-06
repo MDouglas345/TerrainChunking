@@ -1,0 +1,53 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWStructuredBuffer<float4> ChunkData;
+
+AppendStructuredBuffer<float4> LODBufferHigh;
+AppendStructuredBuffer<float4> LODBufferMed;
+AppendStructuredBuffer<float4> LODBufferLow;
+
+float2 Reference;
+
+float2 Ranges;
+
+int ViewDistance;
+
+int TotalChunks;
+
+[numthreads(64,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    // TODO: insert actual code here!
+
+    //Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+
+    if (TotalChunks <= id.x){
+        return;
+    }
+
+   float4 chunk = ChunkData[id.x];
+
+   //LODBufferHigh.Append(chunk);
+   //return;
+
+   float2 distvec = (chunk.xy * 256 + float2(128,128)) - Reference;
+
+   float dist = sqrt(distvec.x * distvec.x + distvec.y * distvec.y);
+
+   if (Ranges.x >= dist){
+    LODBufferHigh.Append(chunk);
+   }
+   else if (Ranges.y>= dist){
+    LODBufferMed.Append(chunk);
+   }
+   /*else if (ViewDistance * 13>= dist){
+    LODBufferLow.Append(chunk);
+   }*/
+   else {
+    LODBufferLow.Append(chunk);
+   }
+
+}
