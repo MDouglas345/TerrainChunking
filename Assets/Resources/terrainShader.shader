@@ -119,7 +119,7 @@ Shader "Unlit/terrainShader"
 
                 float4 tex = tex2Dlod (_HeightMap, float4(v.uv,0,0));
                 v.vertex.y = tex.r * _HeightDisplacement;
-                o.normal = filterNormalOnV(v.uv,_texelSize, _terrainsize);
+                //o.normal = filterNormalOnV(v.uv,_texelSize, _terrainsize);
                 
                 half3 worldNormal = UnityObjectToWorldNormal(v.normal);
                 //half3 worldNormal = v.normal;
@@ -147,16 +147,36 @@ Shader "Unlit/terrainShader"
                // return float4(i.normal, 1);
                 fixed4 col = tex2D(_Texture, i.uv);
                 fixed4 col2 = tex2D(_Texture, i.ouv);
-                
+
+                float3 normal = normalize(filterNormal(i.uv,_texelSize, _terrainsize));
+
+                float3 worldNormal = UnityObjectToWorldNormal(normal);
+
+                float3 cameraforward = normalize(mul((float3x3)unity_CameraToWorld, float3(0,0,1)));
+
+                float3 cfReflected = reflect(-cameraforward, normal);
+
+
+                float spec = max(0,dot(_WorldSpaceLightPos0.xyz, cfReflected) * _LightColor0 * 0.5f);
+
+                float nl = max(0, dot(worldNormal, _WorldSpaceLightPos0.xyz));
+                // factor in the light color
+                float diff = nl * _LightColor0;
+
+
+
                 float attenuation = SHADOW_ATTENUATION(i);
-                float4 ambient = col * 0.1f;
+                //float4 ambient = (col * 0.7 + col2 * 0.3);
+                float ambient = _LightColor0 * 0.4f;
+
                 // calculated as  1 / (heightmap length * 256)
                 //return (float4(filterNormal(i.uv,_texelSize, _terrainsize),1) * 0.5 + col * 0.1f) * (i.diff * 0.9)  * attenuation  + ambient ;
                 // apply fog
                 UNITY_APPLY_FOG(i.fogCoord, col);
 
                  //fixed shadow = SHADOW_ATTENUATION(i);
-                return (col * 0.8 + col2 * 0.2) * i.diff * attenuation  + ambient;
+                
+                return (ambient + (diff + spec) *(attenuation*0.5f)) * (col * 0.7 + col2 * 0.3)   ;
             }
             ENDCG
         }
