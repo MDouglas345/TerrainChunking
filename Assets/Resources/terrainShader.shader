@@ -113,7 +113,7 @@ Shader "Unlit/terrainShader"
                 v2f o;
                 float4 ChunkData = _ChunkData[instanceID];
                 v.vertex = v.vertex + float4(ChunkData.x * 256,0,ChunkData.y * 256,0);
-                o.ouv = v.uv * 5;
+                o.ouv = v.uv * 16;
                 v.uv = v.uv + ChunkData.zw;
                 
 
@@ -121,11 +121,7 @@ Shader "Unlit/terrainShader"
                 v.vertex.y = tex.r * _HeightDisplacement;
                 //o.normal = filterNormalOnV(v.uv,_texelSize, _terrainsize);
                 
-                half3 worldNormal = UnityObjectToWorldNormal(v.normal);
-                //half3 worldNormal = v.normal;
-                half nl = max(0, dot(worldNormal, _WorldSpaceLightPos0.xyz));
-                // factor in the light color
-                o.diff = nl * _LightColor0;
+               
 
                 //o.ambient =ShadeSH9(half3(worldNormal1));
                 
@@ -176,7 +172,7 @@ Shader "Unlit/terrainShader"
 
                  //fixed shadow = SHADOW_ATTENUATION(i);
                 
-                return (ambient + (diff + spec) *(attenuation*0.5f)) * (col * 0.7 + col2 * 0.3)   ;
+                return (ambient + (diff + spec) *(attenuation)) * (col * 0.7 + col2 * 0.3)   ;
             }
             ENDCG
         }
